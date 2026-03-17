@@ -32,19 +32,27 @@ Edit the `CONFIG` object at the top of the file:
 
 ```js
 const CONFIG = {
-  targetIds: [],    // empty = convert all, or ['id-of-group-1', 'id-of-group-2']
-  pillBg: "",       // pill background color, e.g. '#0091ae'
-  pillColor: "",    // pill text color, e.g. '#fff'
+  minOptions: 6,            // only convert groups with at least this many options (0 = convert all)
+  targetIds: [],            // always convert these groups regardless of minOptions
+  excludeIds: [],           // never convert these groups even if they meet the threshold
+  pillBg: "",               // pill background color, e.g. '#0091ae'
+  pillColor: "",            // pill text color, e.g. '#fff'
+  pillRemoveColor: "",      // X button color, defaults to pill text color at 60% opacity
+  pillRemoveHoverColor: "", // X button hover color, defaults to pill text color at full opacity
 };
 ```
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-| `targetIds` | `string[]` | `[]` | IDs of specific `hsfc-CheckboxFieldGroup` elements to convert. Empty array converts all. |
+| `minOptions` | `number` | `6` | Only convert groups with at least this many checkboxes. Set to `0` to convert all regardless of count. |
+| `targetIds` | `string[]` | `[]` | Always convert these groups by ID, even if they have fewer than `minOptions` options. |
+| `excludeIds` | `string[]` | `[]` | Never convert these groups by ID, even if they meet the `minOptions` threshold. |
 | `pillBg` | `string` | `""` | Background color for selected item pills. Uses default light gray when empty. |
 | `pillColor` | `string` | `""` | Text color for selected item pills. Inherits from parent when empty. |
+| `pillRemoveColor` | `string` | `""` | Color of the X remove button. Defaults to the pill text color at 60% opacity. |
+| `pillRemoveHoverColor` | `string` | `""` | Hover color of the X remove button. Defaults to the pill text color at full opacity. |
 
-Pill colors can also be overridden via CSS custom properties `--mscombo-pill-bg` and `--mscombo-pill-color`.
+All pill styles can also be overridden via CSS custom properties: `--mscombo-pill-bg`, `--mscombo-pill-color`, `--mscombo-pill-remove-color`, `--mscombo-pill-remove-hover-color`.
 
 ## Keyboard Navigation
 

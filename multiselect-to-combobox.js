@@ -7,9 +7,13 @@
 (() => {
   // ---- CONFIG ----
   const CONFIG = {
-    targetIds: [],    // empty = convert all, or ['id-one', 'id-two']
-    pillBg: "",       // pill background color, e.g. '#0091ae'
-    pillColor: "",    // pill text color, e.g. '#fff'
+    minOptions: 6, // only convert groups with at least this many options (0 = convert all)
+    targetIds: [], // always convert these groups regardless of minOptions
+    excludeIds: [], // never convert these groups even if they meet the threshold
+    pillBg: "", // pill background color, e.g. '#0091ae'
+    pillColor: "", // pill text color, e.g. '#fff'
+    pillRemoveColor: "", // X button color, defaults to pill text color at 60% opacity
+    pillRemoveHoverColor: "", // X button hover color, defaults to pill text color at full opacity
   };
   // ---- END CONFIG ----
   const CSS = `
@@ -60,7 +64,8 @@
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
-      opacity: 0.6;
+      color: var(--mscombo-pill-remove-color, inherit);
+      opacity: var(--mscombo-pill-remove-opacity, 0.6);
       flex-shrink: 0;
       min-width: 24px;
       min-height: 24px;
@@ -69,7 +74,8 @@
       justify-content: center;
     }
     .mscombo-pill-remove:hover {
-      opacity: 1;
+      color: var(--mscombo-pill-remove-hover-color, inherit);
+      opacity: var(--mscombo-pill-remove-hover-opacity, 1);
     }
     .mscombo-placeholder {
       color: #99acc2;
@@ -221,8 +227,25 @@
     style.id = "mscombo-styles";
     style.textContent = CSS;
     document.head.appendChild(style);
-    if (CONFIG.pillBg) document.documentElement.style.setProperty("--mscombo-pill-bg", CONFIG.pillBg);
-    if (CONFIG.pillColor) document.documentElement.style.setProperty("--mscombo-pill-color", CONFIG.pillColor);
+    const root = document.documentElement;
+    if (CONFIG.pillBg)
+      root.style.setProperty("--mscombo-pill-bg", CONFIG.pillBg);
+    if (CONFIG.pillColor)
+      root.style.setProperty("--mscombo-pill-color", CONFIG.pillColor);
+    if (CONFIG.pillRemoveColor) {
+      root.style.setProperty(
+        "--mscombo-pill-remove-color",
+        CONFIG.pillRemoveColor
+      );
+      root.style.setProperty("--mscombo-pill-remove-opacity", "1");
+    }
+    if (CONFIG.pillRemoveHoverColor) {
+      root.style.setProperty(
+        "--mscombo-pill-remove-hover-color",
+        CONFIG.pillRemoveHoverColor
+      );
+      root.style.setProperty("--mscombo-pill-remove-hover-opacity", "1");
+    }
   }
 
   function convertGroup(group) {
@@ -324,7 +347,9 @@
 
     function announce(msg) {
       liveRegion.textContent = "";
-      requestAnimationFrame(() => { liveRegion.textContent = msg; });
+      requestAnimationFrame(() => {
+        liveRegion.textContent = msg;
+      });
     }
 
     function getVisibleRows() {
@@ -351,7 +376,9 @@
       row.classList.toggle("selected", opt.checkbox.checked);
       row.setAttribute("aria-selected", String(opt.checkbox.checked));
       renderPills();
-      announce(opt.label + (opt.checkbox.checked ? " selected" : " deselected"));
+      announce(
+        opt.label + (opt.checkbox.checked ? " selected" : " deselected")
+      );
     }
 
     function renderOptions(filter = "") {
@@ -502,7 +529,11 @@
         } else {
           setFocusedIndex(focusedIndex - 1);
         }
-      } else if (e.key === "Enter" && focusedIndex >= 0 && focusedIndex < rows.length) {
+      } else if (
+        e.key === "Enter" &&
+        focusedIndex >= 0 &&
+        focusedIndex < rows.length
+      ) {
         e.preventDefault();
         rows[focusedIndex].click();
       } else if (e.key === "Home") {
@@ -532,17 +563,27 @@
     renderOptions();
   }
 
-  function convertAll() {
-    let groups;
-    if (CONFIG.targetIds.length) {
-      groups = CONFIG.targetIds
-        .map((id) => document.getElementById(id))
-        .filter((el) => el && el.classList.contains("hsfc-CheckboxFieldGroup"));
-    } else {
-      groups = document.querySelectorAll(".hsfc-CheckboxFieldGroup");
+  function shouldConvert(group) {
+    const id = group.id;
+    if (CONFIG.excludeIds.includes(id)) return false;
+    if (CONFIG.targetIds.includes(id)) return true;
+    if (CONFIG.minOptions > 0) {
+      const count = group.querySelectorAll('input[type="checkbox"]').length;
+      return count >= CONFIG.minOptions;
     }
-    groups.forEach(convertGroup);
-    return groups.length > 0;
+    return true;
+  }
+
+  function convertAll() {
+    const allGroups = document.querySelectorAll(".hsfc-CheckboxFieldGroup");
+    let converted = 0;
+    allGroups.forEach((group) => {
+      if (shouldConvert(group)) {
+        convertGroup(group);
+        converted++;
+      }
+    });
+    return converted > 0;
   }
 
   // Wait for HubSpot form to load, then convert
