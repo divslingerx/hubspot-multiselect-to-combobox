@@ -1,0 +1,573 @@
+/**
+ * Converts HubSpot hsfc-CheckboxFieldGroup multi-select checkboxes into
+ * searchable combobox dropdowns with multi-select capability.
+ *
+ * Auto-runs when the form loads. Edit the CONFIG object below to customize.
+ */
+(() => {
+  // ---- CONFIG ----
+  const CONFIG = {
+    targetIds: [],    // empty = convert all, or ['id-one', 'id-two']
+    pillBg: "",       // pill background color, e.g. '#0091ae'
+    pillColor: "",    // pill text color, e.g. '#fff'
+  };
+  // ---- END CONFIG ----
+  const CSS = `
+    .mscombo-wrapper {
+      position: relative;
+      font-family: inherit;
+    }
+    .mscombo-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      padding: 6px 12px;
+      border: 1px solid #cbd6e2;
+      border-radius: 3px;
+      background: #fff;
+      cursor: pointer;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .mscombo-trigger:focus-within {
+      border-color: #0091ae;
+      box-shadow: 0 0 0 1px #0091ae;
+    }
+    .mscombo-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+    .mscombo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: var(--mscombo-pill-bg, #eaf0f6);
+      color: var(--mscombo-pill-color, inherit);
+      border-radius: 3px;
+      font-size: 13px;
+      line-height: 1.4;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mscombo-pill-remove {
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      opacity: 0.6;
+      flex-shrink: 0;
+      min-width: 24px;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mscombo-pill-remove:hover {
+      opacity: 1;
+    }
+    .mscombo-placeholder {
+      color: #99acc2;
+      font-size: 14px;
+    }
+    .mscombo-arrow {
+      flex-shrink: 0;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid #516f90;
+      transition: transform 0.2s;
+    }
+    .mscombo-wrapper.open .mscombo-arrow {
+      transform: rotate(180deg);
+    }
+    .mscombo-dropdown {
+      display: none;
+      position: absolute;
+      z-index: 1000;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid #cbd6e2;
+      border-radius: 3px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      max-height: min(260px, 50vh);
+      overflow: hidden;
+      flex-direction: column;
+    }
+    .mscombo-wrapper.open .mscombo-dropdown {
+      display: flex;
+    }
+    .mscombo-search {
+      padding: 10px 12px;
+      border: none;
+      border-bottom: 1px solid #eaf0f6;
+      font-size: 16px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .mscombo-options {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+    .mscombo-done {
+      display: none;
+      padding: 10px 12px;
+      border: none;
+      border-top: 1px solid #eaf0f6;
+      background: #fff;
+      color: #0091ae;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      min-height: 44px;
+    }
+    @media (pointer: coarse) {
+      .mscombo-done {
+        display: block;
+      }
+    }
+    .mscombo-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      min-height: 44px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.1s;
+      box-sizing: border-box;
+    }
+    .mscombo-option:hover {
+      background: #eaf0f6;
+    }
+    .mscombo-option.focused {
+      outline: 2px solid #0091ae;
+      outline-offset: -2px;
+    }
+    .mscombo-option.selected {
+      background: #f0f8ff;
+    }
+    .mscombo-option-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 1px solid #cbd6e2;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .mscombo-option.selected .mscombo-option-checkbox {
+      background: #0091ae;
+      border-color: #0091ae;
+    }
+    .mscombo-option.selected .mscombo-option-checkbox::after {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 8px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translateY(-1px);
+    }
+    .mscombo-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #99acc2;
+      font-size: 13px;
+    }
+    .mscombo-trigger:focus-visible {
+      border-color: #0091ae;
+      box-shadow: 0 0 0 2px #0091ae;
+    }
+    .mscombo-pill-remove:focus-visible {
+      opacity: 1;
+      outline: 2px solid #0091ae;
+      outline-offset: 1px;
+      border-radius: 2px;
+    }
+    .mscombo-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .mscombo-hidden {
+      display: none !important;
+    }
+  `;
+
+  function injectCSS() {
+    if (document.getElementById("mscombo-styles")) return;
+    const style = document.createElement("style");
+    style.id = "mscombo-styles";
+    style.textContent = CSS;
+    document.head.appendChild(style);
+    if (CONFIG.pillBg) document.documentElement.style.setProperty("--mscombo-pill-bg", CONFIG.pillBg);
+    if (CONFIG.pillColor) document.documentElement.style.setProperty("--mscombo-pill-color", CONFIG.pillColor);
+  }
+
+  function convertGroup(group) {
+    if (group.dataset.mscomboConverted) return;
+    group.dataset.mscomboConverted = "true";
+
+    const optionsContainer = group.querySelector(
+      ".hsfc-CheckboxFieldGroup__Options"
+    );
+    if (!optionsContainer) return;
+
+    const checkboxes = optionsContainer.querySelectorAll(
+      'input[type="checkbox"]'
+    );
+    if (!checkboxes.length) return;
+
+    const options = Array.from(checkboxes).map((cb) => ({
+      value: cb.value,
+      label:
+        cb.closest("label").querySelector("span span")?.textContent?.trim() ||
+        cb.value,
+      checkbox: cb,
+    }));
+
+    // Grab the field label text from the existing HubSpot label
+    const fieldLabel = group.querySelector(".hsfc-FieldLabel");
+    const fieldLabelText = fieldLabel?.textContent?.trim() || "Select options";
+
+    // Generate unique IDs for ARIA relationships
+    const uid = "mscombo-" + Math.random().toString(36).slice(2, 9);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "mscombo-wrapper";
+
+    const trigger = document.createElement("div");
+    trigger.className = "mscombo-trigger";
+    trigger.setAttribute("tabindex", "0");
+    trigger.setAttribute("role", "combobox");
+    trigger.setAttribute("aria-expanded", "false");
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-label", fieldLabelText);
+    trigger.setAttribute("aria-controls", uid + "-listbox");
+    trigger.id = uid + "-trigger";
+
+    const pills = document.createElement("div");
+    pills.className = "mscombo-pills";
+
+    const placeholder = document.createElement("span");
+    placeholder.className = "mscombo-placeholder";
+    placeholder.textContent = "Select options...";
+    pills.appendChild(placeholder);
+
+    const arrow = document.createElement("div");
+    arrow.className = "mscombo-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+
+    trigger.appendChild(pills);
+    trigger.appendChild(arrow);
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "mscombo-dropdown";
+
+    const optionsList = document.createElement("div");
+    optionsList.className = "mscombo-options";
+    optionsList.setAttribute("role", "listbox");
+    optionsList.setAttribute("aria-multiselectable", "true");
+    optionsList.setAttribute("aria-label", fieldLabelText);
+    optionsList.id = uid + "-listbox";
+
+    const searchInput = document.createElement("input");
+    searchInput.className = "mscombo-search";
+    searchInput.type = "text";
+    searchInput.placeholder = "Search...";
+    searchInput.setAttribute("aria-label", "Filter " + fieldLabelText);
+    searchInput.setAttribute("aria-controls", uid + "-listbox");
+    searchInput.setAttribute("aria-autocomplete", "list");
+
+    const doneBtn = document.createElement("button");
+    doneBtn.className = "mscombo-done";
+    doneBtn.type = "button";
+    doneBtn.textContent = "Done";
+
+    // Live region for screen reader announcements
+    const liveRegion = document.createElement("div");
+    liveRegion.setAttribute("role", "status");
+    liveRegion.setAttribute("aria-live", "polite");
+    liveRegion.setAttribute("aria-atomic", "true");
+    liveRegion.className = "mscombo-sr-only";
+
+    dropdown.appendChild(searchInput);
+    dropdown.appendChild(optionsList);
+    dropdown.appendChild(doneBtn);
+
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(dropdown);
+    wrapper.appendChild(liveRegion);
+
+    let focusedIndex = -1;
+
+    function announce(msg) {
+      liveRegion.textContent = "";
+      requestAnimationFrame(() => { liveRegion.textContent = msg; });
+    }
+
+    function getVisibleRows() {
+      return Array.from(optionsList.querySelectorAll(".mscombo-option"));
+    }
+
+    function setFocusedIndex(idx) {
+      const rows = getVisibleRows();
+      rows.forEach((r) => r.classList.remove("focused"));
+      focusedIndex = idx;
+      if (idx >= 0 && idx < rows.length) {
+        rows[idx].classList.add("focused");
+        rows[idx].scrollIntoView({ block: "nearest" });
+        searchInput.setAttribute("aria-activedescendant", rows[idx].id);
+      } else {
+        searchInput.removeAttribute("aria-activedescendant");
+      }
+    }
+
+    function toggleOption(opt, row) {
+      opt.checkbox.checked = !opt.checkbox.checked;
+      opt.checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+      opt.checkbox.dispatchEvent(new Event("input", { bubbles: true }));
+      row.classList.toggle("selected", opt.checkbox.checked);
+      row.setAttribute("aria-selected", String(opt.checkbox.checked));
+      renderPills();
+      announce(opt.label + (opt.checkbox.checked ? " selected" : " deselected"));
+    }
+
+    function renderOptions(filter = "") {
+      optionsList.innerHTML = "";
+      const lowerFilter = filter.toLowerCase();
+      let hasVisible = false;
+      let visibleIdx = 0;
+
+      options.forEach((opt) => {
+        if (lowerFilter && !opt.label.toLowerCase().includes(lowerFilter))
+          return;
+        hasVisible = true;
+
+        const row = document.createElement("div");
+        row.className =
+          "mscombo-option" + (opt.checkbox.checked ? " selected" : "");
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", String(opt.checkbox.checked));
+        row.id = uid + "-option-" + visibleIdx;
+        visibleIdx++;
+
+        const check = document.createElement("div");
+        check.className = "mscombo-option-checkbox";
+        check.setAttribute("aria-hidden", "true");
+
+        const label = document.createElement("span");
+        label.textContent = opt.label;
+
+        row.appendChild(check);
+        row.appendChild(label);
+
+        row.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleOption(opt, row);
+        });
+
+        optionsList.appendChild(row);
+      });
+
+      focusedIndex = -1;
+      searchInput.removeAttribute("aria-activedescendant");
+
+      if (!hasVisible) {
+        const noResults = document.createElement("div");
+        noResults.className = "mscombo-no-results";
+        noResults.setAttribute("role", "status");
+        noResults.textContent = "No results found";
+        optionsList.appendChild(noResults);
+      }
+    }
+
+    function renderPills() {
+      pills.innerHTML = "";
+      const selected = options.filter((o) => o.checkbox.checked);
+
+      if (!selected.length) {
+        const ph = document.createElement("span");
+        ph.className = "mscombo-placeholder";
+        ph.textContent = "Select options...";
+        pills.appendChild(ph);
+        return;
+      }
+
+      selected.forEach((opt) => {
+        const pill = document.createElement("span");
+        pill.className = "mscombo-pill";
+
+        const text = document.createElement("span");
+        text.textContent = opt.label;
+
+        const remove = document.createElement("span");
+        remove.className = "mscombo-pill-remove";
+        remove.innerHTML = "&times;";
+        remove.setAttribute("role", "button");
+        remove.setAttribute("tabindex", "0");
+        remove.setAttribute("aria-label", "Remove " + opt.label);
+        function removePill(e) {
+          e.stopPropagation();
+          opt.checkbox.checked = false;
+          opt.checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+          opt.checkbox.dispatchEvent(new Event("input", { bubbles: true }));
+          announce(opt.label + " removed");
+          renderPills();
+          renderOptions(searchInput.value);
+        }
+        remove.addEventListener("click", removePill);
+        remove.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            removePill(e);
+          }
+        });
+
+        pill.appendChild(text);
+        pill.appendChild(remove);
+        pills.appendChild(pill);
+      });
+    }
+
+    function open() {
+      wrapper.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+      searchInput.value = "";
+      renderOptions();
+      searchInput.focus();
+    }
+
+    function close(returnFocus) {
+      wrapper.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+      focusedIndex = -1;
+      searchInput.removeAttribute("aria-activedescendant");
+      if (returnFocus !== false) trigger.focus();
+    }
+
+    trigger.addEventListener("click", () => {
+      wrapper.classList.contains("open") ? close() : open();
+    });
+
+    trigger.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        wrapper.classList.contains("open") ? close() : open();
+      } else if (e.key === "Escape") {
+        close();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!wrapper.classList.contains("open")) open();
+        else setFocusedIndex(0);
+      }
+    });
+
+    searchInput.addEventListener("input", () => {
+      renderOptions(searchInput.value);
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      const rows = getVisibleRows();
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedIndex(Math.min(focusedIndex + 1, rows.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (focusedIndex <= 0) {
+          setFocusedIndex(-1);
+        } else {
+          setFocusedIndex(focusedIndex - 1);
+        }
+      } else if (e.key === "Enter" && focusedIndex >= 0 && focusedIndex < rows.length) {
+        e.preventDefault();
+        rows[focusedIndex].click();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setFocusedIndex(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setFocusedIndex(rows.length - 1);
+      } else if (e.key === "Tab") {
+        close();
+      }
+    });
+
+    doneBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      close();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!wrapper.contains(e.target)) close(false);
+    });
+
+    optionsContainer.classList.add("mscombo-hidden");
+    optionsContainer.parentNode.appendChild(wrapper);
+
+    renderPills();
+    renderOptions();
+  }
+
+  function convertAll() {
+    let groups;
+    if (CONFIG.targetIds.length) {
+      groups = CONFIG.targetIds
+        .map((id) => document.getElementById(id))
+        .filter((el) => el && el.classList.contains("hsfc-CheckboxFieldGroup"));
+    } else {
+      groups = document.querySelectorAll(".hsfc-CheckboxFieldGroup");
+    }
+    groups.forEach(convertGroup);
+    return groups.length > 0;
+  }
+
+  // Wait for HubSpot form to load, then convert
+  function waitForForm() {
+    injectCSS();
+
+    // Try immediately in case the form is already loaded
+    if (convertAll()) return;
+
+    // Otherwise watch the DOM for checkbox groups to appear
+    const observer = new MutationObserver(() => {
+      if (convertAll()) {
+        observer.disconnect();
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Safety timeout — stop watching after 30s
+    setTimeout(() => observer.disconnect(), 30000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", waitForForm);
+  } else {
+    waitForForm();
+  }
+})();
