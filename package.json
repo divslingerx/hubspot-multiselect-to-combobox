@@ -1,0 +1,18 @@
+{
+  "name": "multiselect-to-combobox",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "serve": "node server.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.0",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

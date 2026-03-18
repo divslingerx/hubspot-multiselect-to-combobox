@@ -18,5 +18,14 @@ Desktop.ini
 .vscode/
 .idea/
 
-# Node (in case dependencies are ever added)
+# Node
 node_modules/
+
+# Playwright
+test-results/
+playwright-report/
+.playwright-mcp/
+
+# HubSpot source files (local testing only)
+form.html
+output.html

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiselect to Combobox - Test Fixture</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
+    h2 { margin-top: 32px; color: #33475b; }
+    .hsfc-FieldLabel { display: block; font-weight: 600; margin-bottom: 4px; }
+    .hsfc-CheckboxFieldGroup { margin-bottom: 24px; }
+    .hsfc-CheckboxFieldGroup__Options label { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>Test Fixture</h1>
+
+  <!-- Group A: 10 options — should convert (above minOptions=6) -->
+  <div data-hsfc-id="CheckboxFieldGroup" class="hsfc-CheckboxFieldGroup" id="group-a">
+    <label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><span><span>Dealers (10 options)</span></span></label>
+    <div class="hsfc-CheckboxFieldGroup__Options" role="group" aria-labelledby="group-a-label">
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="acme_corp" /><span><span>Acme Corp</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="beta_foods" /><span><span>Beta Foods</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="charlie_supply" /><span><span>Charlie Supply</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="delta_equip" /><span><span>Delta Equipment</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="echo_services" /><span><span>Echo Services</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="foxtrot_inc" /><span><span>Foxtrot Inc</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="golf_foods" /><span><span>Golf Foods</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="hotel_supply" /><span><span>Hotel Supply</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="india_equip" /><span><span>India Equipment</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="dealers" value="juliet_dist" /><span><span>Juliet Distributors</span></span></label></div>
+    </div>
+  </div>
+
+  <!-- Group B: 3 options — should NOT convert (below minOptions=6) -->
+  <div data-hsfc-id="CheckboxFieldGroup" class="hsfc-CheckboxFieldGroup" id="group-b">
+    <label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><span><span>Region (3 options)</span></span></label>
+    <div class="hsfc-CheckboxFieldGroup__Options" role="group" aria-labelledby="group-b-label">
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="region" value="north" /><span><span>North</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="region" value="south" /><span><span>South</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="region" value="east" /><span><span>East</span></span></label></div>
+    </div>
+  </div>
+
+  <!-- Group C: 3 options but in targetIds — should convert -->
+  <div data-hsfc-id="CheckboxFieldGroup" class="hsfc-CheckboxFieldGroup" id="group-c-force">
+    <label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><span><span>Priority (3 options, forced)</span></span></label>
+    <div class="hsfc-CheckboxFieldGroup__Options" role="group" aria-labelledby="group-c-label">
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="priority" value="low" /><span><span>Low</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="priority" value="medium" /><span><span>Medium</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="priority" value="high" /><span><span>High</span></span></label></div>
+    </div>
+  </div>
+
+  <!-- Group D: 8 options but in excludeIds — should NOT convert -->
+  <div data-hsfc-id="CheckboxFieldGroup" class="hsfc-CheckboxFieldGroup" id="group-d-exclude">
+    <label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><span><span>Categories (8 options, excluded)</span></span></label>
+    <div class="hsfc-CheckboxFieldGroup__Options" role="group" aria-labelledby="group-d-label">
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat1" /><span><span>Category 1</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat2" /><span><span>Category 2</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat3" /><span><span>Category 3</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat4" /><span><span>Category 4</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat5" /><span><span>Category 5</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat6" /><span><span>Category 6</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat7" /><span><span>Category 7</span></span></label></div>
+      <div><label data-hsfc-id="FieldLabel" class="hsfc-FieldLabel"><input type="checkbox" class="hsfc-CheckboxInput" name="categories" value="cat8" /><span><span>Category 8</span></span></label></div>
+    </div>
+  </div>
+
+  <script src="../multiselect-to-combobox.js"></script>
+</body>
+</html>

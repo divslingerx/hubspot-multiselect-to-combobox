@@ -24,7 +24,7 @@ Designed to be dropped into a HubSpot form as a single JS snippet — no build t
 
 ### As an inline snippet (HubSpot custom code)
 
-Copy the contents of `multiselect-to-combobox.js` into a `<script>` tag in your HubSpot form's custom code section.
+Copy the contents of `multiselect-to-combobox.snippet.html` directly into your HubSpot page's custom code section. This is the same script pre-wrapped in a `<script>` tag.
 
 ## Configuration
 
@@ -81,4 +81,13 @@ All pill styles can also be overridden via CSS custom properties: `--mscombo-pil
 2. When `.hsfc-CheckboxFieldGroup` elements appear (i.e., the HubSpot form finishes loading), they are converted
 3. The original checkbox inputs are hidden but remain in the DOM — clicking a combobox option toggles the underlying checkbox and fires `change`/`input` events
 4. HubSpot's form submission picks up the checkbox values as normal
-5. The observer disconnects after conversion (or after 30 seconds as a safety timeout)
+5. The observer stays active to handle React hydration re-renders that may replace the DOM after initial load
+
+## Testing
+
+```bash
+pnpm install
+pnpm test
+```
+
+Tests use [Playwright](https://playwright.dev/) and cover conversion rules, UI behavior, selection, keyboard navigation, and accessibility.
