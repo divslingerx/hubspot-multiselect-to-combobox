@@ -4,6 +4,10 @@ Converts HubSpot `hsfc-CheckboxFieldGroup` multi-select checkboxes into searchab
 
 Designed to be dropped into a HubSpot form as a single JS snippet — no build tools, no dependencies.
 
+| Before | After |
+|---|---|
+| ![Before — wall of checkboxes](screenshot-before.png) | ![After — searchable combobox with pills](screenshot-after.png) |
+
 ## Features
 
 - **Searchable dropdown** — filter options by typing
